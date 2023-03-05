@@ -14,13 +14,15 @@ def background(body):
         args (list): List of args to pass to the function.
         returning_func (func): Function to run once we complete the main function.
     """
-    if js.location.hostname == "dev.dk64randomizer.com" or js.location.hostname == "dk64randomizer.com":
-        branch = "dev"
+    branch = "dev"
+    if js.location.hostname in [
+        "dev.dk64randomizer.com",
+        "dk64randomizer.com",
+    ]:
         if "dev" not in str(js.location.hostname).lower():
             branch = "master"
         url = "https://dk64-seed-generator.adaptable.app/generate"
     else:
-        url = "http://" + str(js.window.location.hostname) + ":5000/generate"
-        branch = "dev"
+        url = f"http://{str(js.window.location.hostname)}:5000/generate"
     id = str(uuid.uuid1())
     js.generate_seed(url, json.dumps(body), branch, id)

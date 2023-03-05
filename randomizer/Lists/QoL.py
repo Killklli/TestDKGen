@@ -11,7 +11,6 @@ class QoLItem:
         self.tooltip = tooltip
 
 
-QoLSelector = []
 # If you make changes to this list, make sure to change the corresponding
 # MiscChangesSelected enum in randomizer.Enums.Settings.
 QoLItems = [
@@ -33,6 +32,13 @@ QoLItems = [
     QoLItem("Quicker Galleon Star", 9, "The star in Gloomy Galleon now only requires Enguarde to go through it once to open the Gold Tower Gate."),
     QoLItem("Vanilla Bug Fixes", 10, "Various bugs in the vanilla game have been fixed."),
 ]
-for item in QoLItems:
-    if item.name != "No Group":
-        QoLSelector.append({"name": item.name, "value": item.name.lower().replace(" ", "_"), "tooltip": item.tooltip, "shift": item.shift})
+QoLSelector = [
+    {
+        "name": item.name,
+        "value": item.name.lower().replace(" ", "_"),
+        "tooltip": item.tooltip,
+        "shift": item.shift,
+    }
+    for item in QoLItems
+    if item.name != "No Group"
+]

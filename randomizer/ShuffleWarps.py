@@ -30,23 +30,22 @@ def ShuffleWarps(bananaport_replacements, human_ports, selected_warps):
     verifySelectedWarps(selected_warps)
     map_list = getShuffleMaps()
     for warp_map in map_list:
+        # if the warp is in an excluded level, create an entry into bananaport_replacements to point to its vanilla data instead of trying to leave it blank
+        # this function could probably work correctly without this safeguard, but i'd rather be safe than sorry
+        pad_list = []
+        pad_temp_list = [[], [], [], [], []]
         if warp_map not in selected_warps:
-            # if the warp is in an excluded level, create an entry into bananaport_replacements to point to its vanilla data instead of trying to leave it blank
-            # this function could probably work correctly without this safeguard, but i'd rather be safe than sorry
-            pad_list = []
-            pad_temp_list = [[], [], [], [], []]
             for warp in BananaportVanilla.values():
                 if warp.map_id == warp_map:
                     pad_temp_list[warp.vanilla_warp].append(warp.obj_id_vanilla)
                     if len(pad_temp_list[warp.vanilla_warp]) > 1:
                         pad_list.append({"warp_index": warp.vanilla_warp, "warp_ids": pad_temp_list[warp.vanilla_warp].copy()})
-            bananaport_replacements.append({"containing_map": warp_map, "pads": pad_list.copy()})
         else:
-            shufflable_warps = []
-            # Generate list of shufflable warp types (Warp 1, Warp 2 etc.)
-            for warp in BananaportVanilla.values():
-                if warp.map_id == warp_map and not warp.locked:
-                    shufflable_warps.append(warp.vanilla_warp)
+            shufflable_warps = [
+                warp.vanilla_warp
+                for warp in BananaportVanilla.values()
+                if warp.map_id == warp_map and not warp.locked
+            ]
             random.shuffle(shufflable_warps)
             shuffle_index = 0
             # Apply shuffle
@@ -54,18 +53,20 @@ def ShuffleWarps(bananaport_replacements, human_ports, selected_warps):
                 if BananaportVanilla[warp].map_id == warp_map and not BananaportVanilla[warp].locked:
                     BananaportVanilla[warp].setNewWarp(shufflable_warps[shuffle_index])
                     shuffle_index += 1
-            # Write to spoiler and create array of replacements
-            pad_list = []
-            pad_temp_list = [[], [], [], [], []]
             for warp in BananaportVanilla.values():
                 if warp.map_id == warp_map:
-                    human_ports[warp.name] = "Warp " + str(warp.new_warp + 1)
+                    human_ports[warp.name] = f"Warp {str(warp.new_warp + 1)}"
                     if not warp.locked:
                         pad_temp_list[warp.new_warp].append(warp.obj_id_vanilla)
-            for warp_index in range(len(pad_temp_list)):
-                if len(pad_temp_list[warp_index]) > 0:
-                    pad_list.append({"warp_index": warp_index, "warp_ids": pad_temp_list[warp_index].copy()})
-            bananaport_replacements.append({"containing_map": warp_map, "pads": pad_list.copy()})
+            pad_list.extend(
+                {
+                    "warp_index": warp_index,
+                    "warp_ids": pad_temp_list[warp_index].copy(),
+                }
+                for warp_index in range(len(pad_temp_list))
+                if len(pad_temp_list[warp_index]) > 0
+            )
+        bananaport_replacements.append({"containing_map": warp_map, "pads": pad_list.copy()})
     # After shuffling the warps, make sure the swap indexes are right for warp linking immediately after this method
     # This probably is the least efficient way to do it but it works
     for warp_id, warp in BananaportVanilla.items():
@@ -90,7 +91,7 @@ def ShuffleWarpsCrossMap(bananaport_replacements, human_ports, is_coupled, selec
         warp.cross_map_placed = False
         bananaport_replacements.append(0)
     selected_warp_list = []
-    for idx, warp in enumerate(BananaportVanilla.values()):
+    for warp in BananaportVanilla.values():
         if warp.map_id not in selected_warps:
             # if the warp is in an excluded level, create an entry into bananaport_replacements to point to its vanilla data instead of trying to leave it blank
             for warp_check in BananaportVanilla.values():

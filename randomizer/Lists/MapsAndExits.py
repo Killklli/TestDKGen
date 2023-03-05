@@ -486,10 +486,10 @@ LevelMapTable = {
 
 def getLevelFromMap(map_enum):
     """Get level from map index referencing lookup table."""
-    for level in LevelMapTable:
-        if map_enum in LevelMapTable[level]:
-            return level
-    return None
+    return next(
+        (level for level in LevelMapTable if map_enum in LevelMapTable[level]),
+        None,
+    )
 
 
 MapExitTable = {
@@ -722,8 +722,4 @@ def GetMapId(regionId):
 def GetExitId(back: TransitionBack):
     """Get exit id of a transition."""
     mapId = GetMapId(back.regionId)
-    if mapId in MapExitTable:
-        return MapExitTable[mapId].index(back.name)
-    else:
-        # Default exit number should be zero for all maps that don't have multiple exits
-        return 0
+    return MapExitTable[mapId].index(back.name) if mapId in MapExitTable else 0

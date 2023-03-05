@@ -103,7 +103,7 @@ def ShuffleShopLocations(spoiler: Spoiler):
         # Assign shuffle to data
         assortment_in_level = {}
         placement_index = 0
-        for shop_index, shop in enumerate(shop_array):
+        for shop in shop_array:
             if not shop.locked:
                 shop.setShop(shops_in_levels[placement_index])
                 assortment_in_level[shop.shop] = shop.new_shop

@@ -28,5 +28,5 @@ def generate_playthrough(form_string: str):
         Generate_Spoiler(spoiler)
         return codecs.encode(pickle.dumps(spoiler), "base64").decode()
     except Exception as e:
-        print("error: " + traceback.format_exc())
+        print(f"error: {traceback.format_exc()}")
         return json.dumps({"error": str(traceback.format_exc())})

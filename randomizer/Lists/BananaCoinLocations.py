@@ -23,10 +23,7 @@ class BananaCoinGroup:
         self.locations = locations  # 4 numbers: {float scale, int x, y, z}
         self.region = region
         self.vanilla = vanilla
-        if logic is None:
-            self.logic = lambda l: True
-        else:
-            self.logic = logic
+        self.logic = (lambda l: True) if logic is None else logic
 
 
 BananaCoinGroupList = {

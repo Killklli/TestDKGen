@@ -30,24 +30,27 @@ def ShuffleBarrels(settings: Settings, barrelLocations, minigamePool):
             continue
         # Check each remaining minigame to see if placing it will produce a valid world
         success = False
-        helm_minigame_available = False
-        for minigame in minigamePool:
-            # Check if any minigames can be placed in helm
-            if MinigameRequirements[minigame].helm_enabled:
-                helm_minigame_available = True
+        helm_minigame_available = any(
+            MinigameRequirements[minigame].helm_enabled
+            for minigame in minigamePool
+        )
         for minigame in minigamePool:
             # If this minigame isn't a minigame for the kong of this location, don't use it
             if BarrelMetaData[location].kong not in MinigameRequirements[minigame].kong_list:
                 continue
             # If there is a minigame that can be placed in Helm, skip banned minigames, otherwise continue as normal
-            if not MinigameRequirements[minigame].helm_enabled and BarrelMetaData[location].map == Maps.HideoutHelm and helm_minigame_available is True:
+            if (
+                not MinigameRequirements[minigame].helm_enabled
+                and BarrelMetaData[location].map == Maps.HideoutHelm
+                and helm_minigame_available
+            ):
                 continue
             # Place the minigame
             BarrelMetaData[location].minigame = minigame
             # Remove the minigame from the pool
             minigamePool.remove(minigame)
             # It is a random chance that the minigame will return to the pool
-            replacement_index = random.randint(int(len(minigamePool) / 2), len(minigamePool))
+            replacement_index = random.randint(len(minigamePool) // 2, len(minigamePool))
             if settings.bonus_barrels != MinigameBarrels.selected and (settings.helm_barrels == MinigameBarrels.skip or not settings.minigames_list_selected):
                 replacement_index = random.randint(20, len(minigamePool))
             if MinigameRequirements[minigame].repeat:
@@ -121,4 +124,4 @@ def BarrelShuffle(settings: Settings):
                 js.postMessage("Minigame placement failed, out of retries.")
                 raise Ex.BarrelAttemptCountExceeded
             retries += 1
-            js.postMessage("Minigame placement failed. Retrying. Tries: " + str(retries))
+            js.postMessage(f"Minigame placement failed. Retrying. Tries: {retries}")

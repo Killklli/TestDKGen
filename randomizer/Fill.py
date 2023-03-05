@@ -102,7 +102,7 @@ def GetAccessibleLocations(settings, startingOwnedItems, searchType=SearchMode.G
     playthroughLocations = []
     eventAdded = True
     # Continue doing searches until nothing new is found
-    while len(newLocations) > 0 or eventAdded:
+    while newLocations or eventAdded:
         # Add items and events from the last search iteration
         sphere = Sphere()
         if playthroughLocations:
@@ -156,17 +156,14 @@ def GetAccessibleLocations(settings, startingOwnedItems, searchType=SearchMode.G
             startRegion.id = Regions.GameStart
             startRegion.dayAccess = True
             startRegion.nightAccess = Events.Night in LogicVariables.Events
-            regionPool = set()
-            regionPool.add(startRegion)
-            addedRegions = set()
-            addedRegions.add(Regions.GameStart)
-
+            regionPool = {startRegion}
+            addedRegions = {Regions.GameStart}
             tagAccess = [(key, value) for (key, value) in Logic.Regions.items() if value.HasAccess(kong) and key not in addedRegions]
             addedRegions.update([x[0] for x in tagAccess])  # first value is the region key
             regionPool.update([x[1] for x in tagAccess])  # second value is the region itself
 
             # Loop for each region until no more accessible regions found
-            while len(regionPool) > 0:
+            while regionPool:
                 region = regionPool.pop()
                 region.UpdateAccess(kong, LogicVariables)  # Set that this kong has access to this region
                 LogicVariables.UpdateCurrentRegionAccess(region)  # Set in logic as well
@@ -231,7 +228,7 @@ def GetAccessibleLocations(settings, startingOwnedItems, searchType=SearchMode.G
                         shuffledExit = ShuffleExits.ShufflableExits[exit.exitShuffleId]
                         if shuffledExit.shuffled:
                             destination = ShuffleExits.ShufflableExits[shuffledExit.shuffledId].back.regionId
-                        elif shuffledExit.toBeShuffled and not exit.assumed:
+                        elif shuffledExit.toBeShuffled:
                             continue
                     # If a region is accessible through this exit and has not yet been added, add it to the queue to be visited eventually
                     if destination not in addedRegions and exit.logic(LogicVariables):
@@ -283,7 +280,10 @@ def GetAccessibleLocations(settings, startingOwnedItems, searchType=SearchMode.G
 
     if searchType in (SearchMode.GetReachable, SearchMode.GetReachableWithControlledPurchases):
         return accessible
-    elif searchType == SearchMode.CheckBeatable or searchType == SearchMode.CheckSpecificItemReachable:
+    elif searchType in [
+        SearchMode.CheckBeatable,
+        SearchMode.CheckSpecificItemReachable,
+    ]:
         # If the search has completed and the target item has not been found, then we failed to find it
         # settings.debug_accessible = accessible
         return False
@@ -309,15 +309,10 @@ def VerifyWorld(settings):
     ItemPool.PlaceConstants(settings)
     unreachables = GetAccessibleLocations(settings, ItemPool.AllItems(settings), SearchMode.GetUnreachable)
     allLocationsReached = len(unreachables) == 0
-    allCBsFound = True
-    for level_index in range(7):
-        if sum(LogicVariables.ColoredBananas[level_index]) != 500:
-            # missingCBs = []
-            # for region_collectible_list in Logic.CollectibleRegions.values():
-            #     for collectible in region_collectible_list:
-            #         if collectible.enabled and not collectible.added:
-            #             missingCBs.append(collectible)
-            allCBsFound = False
+    allCBsFound = all(
+        sum(LogicVariables.ColoredBananas[level_index]) == 500
+        for level_index in range(7)
+    )
     Reset()
     return allLocationsReached and allCBsFound
 
@@ -341,7 +336,7 @@ def VerifyWorldWithWorstCoinUsage(settings):
         # Subtract the price of the chosen location from maxCoinsNeeded
         itemsToPurchase = [LocationList[x].item for x in locationsToPurchase]
         coinsSpent = GetMaxCoinsSpent(settings, locationsToPurchase)
-        coinsNeeded = [maxCoins[kong] - coinsSpent[kong] for kong in range(0, 5)]
+        coinsNeeded = [maxCoins[kong] - coinsSpent[kong] for kong in range(5)]
         LogicVariables.UpdateCoins()
         coinsBefore = LogicVariables.Coins.copy()
         # print("Coins owned during search: " + str(coinsBefore))
@@ -371,8 +366,10 @@ def VerifyWorldWithWorstCoinUsage(settings):
         shopDifferentials = {}
         shopUnlocksItems = {}
         # If no accessible shop locations found, means you got coin locked and the seed is not valid
-        if len(newReachableShops) == 0:
-            print("Seed is invalid, coin locked with purchase order: " + str([LocationList[x].name + ": " + LocationList[x].item.name + ", " for x in locationsToPurchase]))
+        if not newReachableShops:
+            print(
+                f'Seed is invalid, coin locked with purchase order: {[f"{LocationList[x].name}: {LocationList[x].item.name}, " for x in locationsToPurchase]}'
+            )
             Reset()
             return False
         locationToBuy = None
@@ -398,7 +395,7 @@ def VerifyWorldWithWorstCoinUsage(settings):
                 locationToBuy = shopLocation
                 continue
             # Coin differential must be negative for at least one kong to be considered new worst
-            if len([x for x in shopDifferentials[shopLocation] if x < 0]) == 0:
+            if not [x for x in shopDifferentials[shopLocation] if x < 0]:
                 continue
             # If a move unlocks new kongs it is more useful than others, even if it has a worse coin differential
             existingMoveKongsUnlocked = len([x for x in shopUnlocksItems[locationToBuy] if ItemList[x].type == Types.Kong])
@@ -494,13 +491,26 @@ def PareWoth(spoiler, PlaythroughLocations):
     AccessibleHintsForLocation = {}
     for sphere in PlaythroughLocations:
         # Don't want constant locations in woth and we can filter out some types of items as not being essential to the woth
-        for loc in [
-            loc
-            for loc in sphere.locations  # If the Helm Key is in Helm, we may still want path hints for it even though it's a constant item.
-            if (not LocationList[loc].constant or loc == Locations.HelmKey)
-            and ItemList[LocationList[loc].item].type not in (Types.Banana, Types.BlueprintBanana, Types.Crown, Types.Medal, Types.Blueprint)
-        ]:
-            WothLocations.append(loc)
+        WothLocations.extend(
+            iter(
+                [
+                    loc
+                    for loc in sphere.locations  # If the Helm Key is in Helm, we may still want path hints for it even though it's a constant item.
+                    if (
+                        not LocationList[loc].constant
+                        or loc == Locations.HelmKey
+                    )
+                    and ItemList[LocationList[loc].item].type
+                    not in (
+                        Types.Banana,
+                        Types.BlueprintBanana,
+                        Types.Crown,
+                        Types.Medal,
+                        Types.Blueprint,
+                    )
+                ]
+            )
+        )
     WothLocations.append(Locations.BananaHoard)  # The Banana Hoard is the endpoint of the Way of the Hoard
     # Check every item location to see if removing it by itself makes the game unbeatable
     for i in range(len(WothLocations) - 1, -1, -1):

@@ -37,29 +37,29 @@ def ShuffleFairyLocations(spoiler: Spoiler):
     spoiler.fairy_locations = {}
     spoiler.fairy_locations_human = {}
     spoiler.fairy_data_table = [None] * 20
-    level_to_enum = {
-        Levels.DKIsles: randomizer.LogicFiles.DKIsles.LogicRegions,
-        Levels.JungleJapes: randomizer.LogicFiles.JungleJapes.LogicRegions,
-        Levels.AngryAztec: randomizer.LogicFiles.AngryAztec.LogicRegions,
-        Levels.FranticFactory: randomizer.LogicFiles.FranticFactory.LogicRegions,
-        Levels.GloomyGalleon: randomizer.LogicFiles.GloomyGalleon.LogicRegions,
-        Levels.FungiForest: randomizer.LogicFiles.FungiForest.LogicRegions,
-        Levels.CrystalCaves: randomizer.LogicFiles.CrystalCaves.LogicRegions,
-        Levels.CreepyCastle: randomizer.LogicFiles.CreepyCastle.LogicRegions,
-        Levels.HideoutHelm: randomizer.LogicFiles.HideoutHelm.LogicRegions,
-    }
-    level_to_name = {
-        Levels.DKIsles: "Isles",
-        Levels.JungleJapes: "Japes",
-        Levels.AngryAztec: "Aztec",
-        Levels.FranticFactory: "Factory",
-        Levels.GloomyGalleon: "Galleon",
-        Levels.FungiForest: "Forest",
-        Levels.CrystalCaves: "Caves",
-        Levels.CreepyCastle: "Castle",
-        Levels.HideoutHelm: "Helm",
-    }
     if spoiler.settings.random_fairies:
+        level_to_enum = {
+            Levels.DKIsles: randomizer.LogicFiles.DKIsles.LogicRegions,
+            Levels.JungleJapes: randomizer.LogicFiles.JungleJapes.LogicRegions,
+            Levels.AngryAztec: randomizer.LogicFiles.AngryAztec.LogicRegions,
+            Levels.FranticFactory: randomizer.LogicFiles.FranticFactory.LogicRegions,
+            Levels.GloomyGalleon: randomizer.LogicFiles.GloomyGalleon.LogicRegions,
+            Levels.FungiForest: randomizer.LogicFiles.FungiForest.LogicRegions,
+            Levels.CrystalCaves: randomizer.LogicFiles.CrystalCaves.LogicRegions,
+            Levels.CreepyCastle: randomizer.LogicFiles.CreepyCastle.LogicRegions,
+            Levels.HideoutHelm: randomizer.LogicFiles.HideoutHelm.LogicRegions,
+        }
+        level_to_name = {
+            Levels.DKIsles: "Isles",
+            Levels.JungleJapes: "Japes",
+            Levels.AngryAztec: "Aztec",
+            Levels.FranticFactory: "Factory",
+            Levels.GloomyGalleon: "Galleon",
+            Levels.FungiForest: "Forest",
+            Levels.CrystalCaves: "Caves",
+            Levels.CreepyCastle: "Castle",
+            Levels.HideoutHelm: "Helm",
+        }
         fairy_data_table = [
             # HAS to remain in this order. DO NOT REORDER
             FairyPlacementInfo(Locations.JapesBananaFairyRambiCave, Levels.JungleJapes, 0, 51),
@@ -109,9 +109,11 @@ def ShuffleFairyLocations(spoiler: Spoiler):
                         spoiler.fairy_data_table[index] = {
                             "fairy_index": x,
                             "level": level,
-                            "flag": LocationList[data.location].default_mapid_data[0].flag,
-                            "id": -1 if not is_vanilla else data.id,
-                            "shift": -1 if not is_vanilla else data.shift,
+                            "flag": LocationList[data.location]
+                            .default_mapid_data[0]
+                            .flag,
+                            "id": data.id if is_vanilla else -1,
+                            "shift": data.shift if is_vanilla else -1,
                         }
                         # Logic
                         # Remove old from logic

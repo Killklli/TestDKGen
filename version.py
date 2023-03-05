@@ -1,4 +1,5 @@
 """Holds the version for DK64 Rando."""
+
 import js
 
 stable_version = "1.5"
@@ -12,10 +13,10 @@ except Exception:
 only_version = "0.0"
 current_version = "DK64R 0.0"
 if url == "dk64randomizer.com":
-    current_version = "DK64 Randomizer v" + stable_version
+    current_version = f"DK64 Randomizer v{stable_version}"
     only_version = stable_version
 else:
-    current_version = "DK64R Dev v" + dev_version
+    current_version = f"DK64R Dev v{dev_version}"
     only_version = dev_version
 
 try:
@@ -23,7 +24,7 @@ try:
 except Exception:
     pass
 try:
-    js.document.getElementById("live-version").text = current_version + " | "
+    js.document.getElementById("live-version").text = f"{current_version} | "
 except Exception:
     pass
 whl_hash = "no_file_using_filler_hash"

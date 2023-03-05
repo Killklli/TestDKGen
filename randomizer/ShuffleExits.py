@@ -51,9 +51,7 @@ def Reset():
     for exit in ShufflableExits.values():
         exit.shuffledId = None
         exit.shuffled = False
-    assumedExits = []
-    for exit in [x for x in Logic.Regions[root].exits if x.assumed]:
-        assumedExits.append(exit)
+    assumedExits = [x for x in Logic.Regions[root].exits if x.assumed]
     for exit in assumedExits:
         RemoveRootExit(exit)
 
@@ -132,7 +130,7 @@ def ShuffleExitsInPool(settings, frontpool, backpool):
         random.shuffle(frontpool)
 
     # For each back exit, select a random valid front entrance to attach to it
-    while len(backpool) > 0:
+    while backpool:
         backId = backpool.pop(0)
         backExit = ShufflableExits[backId]
         # Filter origins to make sure that if this target requires a certain kong's access, then the entrance will be accessible by that kong
@@ -148,8 +146,8 @@ def ShuffleExitsInPool(settings, frontpool, backpool):
                 origins.remove(Transitions.JapesCartsToMain)
             if Transitions.ForestCartsToMain in origins:
                 origins.remove(Transitions.ForestCartsToMain)
-        if len(origins) == 0:
-            print("Failed to connect to " + backExit.name + ", found no suitable origins!")
+        if not origins:
+            print(f"Failed to connect to {backExit.name}, found no suitable origins!")
             raise Ex.EntranceOutOfDestinations
         # Select a random origin
         for frontId in origins:
@@ -164,10 +162,14 @@ def ShuffleExitsInPool(settings, frontpool, backpool):
                     backpool.remove(frontExit.back.reverse)
                 break
         if not frontExit.shuffled:
-            print("Failed to connect to " + backExit.name + " from any of the remaining " + str(len(origins)) + " origins!")
+            print(
+                f"Failed to connect to {backExit.name} from any of the remaining {len(origins)} origins!"
+            )
             raise Ex.EntranceOutOfDestinations
         if len(frontpool) != len(backpool):
-            print("Length of frontpool " + len(frontpool) + " and length of backpool " + len(backpool) + " do not match!")
+            print(
+                f"Length of frontpool {len(frontpool)} and length of backpool {len(backpool)} do not match!"
+            )
             raise Ex.EntranceOutOfDestinations
 
 
@@ -232,7 +234,7 @@ def ExitShuffle(settings):
                 js.postMessage("Entrance placement failed, out of retries.")
                 raise Ex.EntranceAttemptCountExceeded
             retries += 1
-            js.postMessage("Entrance placement failed. Retrying. Tries: " + str(retries))
+            js.postMessage(f"Entrance placement failed. Retrying. Tries: {retries}")
             Reset()
 
 
@@ -345,16 +347,16 @@ def ShuffleLevelOrderForOneStartingKong(settings):
     # If Aztec is level 4, both of Japes/Factory need to be in level 1-3
     if aztecIndex == 4:
         # Tiny has no coins and no T&S access in Japes so it can't be first for her unless prices are free
-        if settings.starting_kong == Kongs.tiny and settings.random_prices != RandomPrices.free:
-            japesOptions = list(levelIndexChoices.intersection({2, 3}))
-        else:
-            japesOptions = list(levelIndexChoices.intersection({1, 3}))
+        japesOptions = (
+            list(levelIndexChoices.intersection({2, 3}))
+            if settings.starting_kong == Kongs.tiny
+            and settings.random_prices != RandomPrices.free
+            else list(levelIndexChoices.intersection({1, 3}))
+        )
+    elif settings.starting_kong == Kongs.tiny and settings.random_prices != RandomPrices.free:
+        japesOptions = list(levelIndexChoices.intersection({2, 3, 4, 5}))
     else:
-        # Tiny has no coins and no T&S access in Japes so it can't be first for her unless prices are free
-        if settings.starting_kong == Kongs.tiny and settings.random_prices != RandomPrices.free:
-            japesOptions = list(levelIndexChoices.intersection({2, 3, 4, 5}))
-        else:
-            japesOptions = list(levelIndexChoices.intersection({1, 2, 3, 4, 5}))
+        japesOptions = list(levelIndexChoices.intersection({1, 2, 3, 4, 5}))
     japesIndex = random.choice(japesOptions)
     levelIndexChoices.remove(japesIndex)
 
@@ -363,30 +365,26 @@ def ShuffleLevelOrderForOneStartingKong(settings):
     # If Aztec is level 4, both of Japes/Factory need to be in level 1-3
     if aztecIndex == 4:
         factoryOptions = list(levelIndexChoices.intersection({1, 2, 3}))
-    # If Aztec is level 3, one of Japes/Factory needs to be in level 1-2 and other in level 1-5
     elif aztecIndex == 3:
-        if japesIndex < 3:
-            factoryOptions = list(levelIndexChoices.intersection({1, 2, 3, 4, 5}))
-        else:
-            factoryOptions = list(levelIndexChoices.intersection({1, 2}))
-    # If Aztec is level 2 and don't start with diddy or chunky, one of Japes/Factory needs to be level 1 and other in level 3-5
+        factoryOptions = (
+            list(levelIndexChoices.intersection({1, 2, 3, 4, 5}))
+            if japesIndex < 3
+            else list(levelIndexChoices.intersection({1, 2}))
+        )
     elif aztecIndex == 2 and settings.starting_kong != Kongs.diddy and settings.starting_kong != Kongs.chunky:
         if japesIndex == 1:
             factoryOptions = list(levelIndexChoices.intersection({3, 4, 5}))
         else:
             factoryOptions = list(levelIndexChoices.intersection({1}))
-    # If Aztec is level 2 and start with chunky, one of Japes/Factory needs to be level 1-3 and other in level 3-5
     elif aztecIndex == 2 and settings.starting_kong == Kongs.chunky:
         if japesIndex in (1, 3):
             factoryOptions = list(levelIndexChoices.intersection({3, 4, 5}))
         else:
             factoryOptions = list(levelIndexChoices.intersection({1, 2, 3}))
-    # If Aztec is level 1 or 2, one of Japes/Factory needs to be in level 1-4 and other in level 1-5
+    elif japesIndex < 5:
+        factoryOptions = list(levelIndexChoices.intersection({1, 2, 3, 4, 5}))
     else:
-        if japesIndex < 5:
-            factoryOptions = list(levelIndexChoices.intersection({1, 2, 3, 4, 5}))
-        else:
-            factoryOptions = list(levelIndexChoices.intersection({1, 2, 3, 4}))
+        factoryOptions = list(levelIndexChoices.intersection({1, 2, 3, 4}))
     factoryIndex = random.choice(factoryOptions)
     levelIndexChoices.remove(factoryIndex)
 
@@ -440,30 +438,38 @@ def ShuffleLevelOrderForMultipleStartingKongs(settings: Settings):
             # If don't have 5 kongs yet, stop if don't have enough kongs to reach this level
             if kongsAssumed < 5 and level > kongsAssumed + 1:
                 break
-            if kongsOwned == settings.starting_kongs_count:
-                # If reached Aztec without freeing anyone yet, specific combinations of kongs are needed to open those cages (if they have any occupants)
-                if newLevelOrder[level] == Levels.AngryAztec and (Locations.TinyKong in settings.kong_locations or Locations.LankyKong in settings.kong_locations):
-                    # Assume we can free any locked kongs here
-                    tinyAccessible = Locations.TinyKong in settings.kong_locations
-                    lankyAccessible = Locations.LankyKong in settings.kong_locations
+            if (
+                kongsOwned == settings.starting_kongs_count
+                and newLevelOrder[level] == Levels.AngryAztec
+                and (
+                    Locations.TinyKong in settings.kong_locations
+                    or Locations.LankyKong in settings.kong_locations
+                )
+            ):
+                # Assume we can free any locked kongs here
+                tinyAccessible = Locations.TinyKong in settings.kong_locations
+                lankyAccessible = Locations.LankyKong in settings.kong_locations
                     # If a kong is in Tiny Temple, either Diddy or Chunky can free them
-                    if tinyAccessible:
-                        if Kongs.diddy not in settings.starting_kong_list and Kongs.chunky not in settings.starting_kong_list:
-                            tinyAccessible = False
-                    # If a kong is in Llama temple, need to be able to get past the guitar door and one of Donkey, Lanky, or Tiny to open the Llama temple
-                    if lankyAccessible:
-                        guitarDoorAccess = (
-                            Kongs.diddy in settings.starting_kong_list
-                            or settings.open_levels
-                            or (Kongs.donkey in settings.starting_kong_list and settings.activate_all_bananaports == ActivateAllBananaports.all)
-                        )
-                        if not guitarDoorAccess or (
-                            Kongs.donkey not in settings.starting_kong_list and Kongs.lanky not in settings.starting_kong_list and Kongs.tiny not in settings.starting_kong_list
-                        ):
-                            lankyAccessible = False
-                    # If we can unlock one kong then we can unlock both, so if we can't reach either then we can't assume we can unlock any kong from here
-                    if not tinyAccessible and not lankyAccessible:
-                        break
+                if (
+                    tinyAccessible
+                    and Kongs.diddy not in settings.starting_kong_list
+                    and Kongs.chunky not in settings.starting_kong_list
+                ):
+                    tinyAccessible = False
+                # If a kong is in Llama temple, need to be able to get past the guitar door and one of Donkey, Lanky, or Tiny to open the Llama temple
+                if lankyAccessible:
+                    guitarDoorAccess = (
+                        Kongs.diddy in settings.starting_kong_list
+                        or settings.open_levels
+                        or (Kongs.donkey in settings.starting_kong_list and settings.activate_all_bananaports == ActivateAllBananaports.all)
+                    )
+                    if not guitarDoorAccess or (
+                        Kongs.donkey not in settings.starting_kong_list and Kongs.lanky not in settings.starting_kong_list and Kongs.tiny not in settings.starting_kong_list
+                    ):
+                        lankyAccessible = False
+                # If we can unlock one kong then we can unlock both, so if we can't reach either then we can't assume we can unlock any kong from here
+                if not tinyAccessible and not lankyAccessible:
+                    break
             levelsReachable.append(level)
             # Check if a level has been assigned here
             if newLevelOrder[level] is not None:
@@ -475,7 +481,7 @@ def ShuffleLevelOrderForMultipleStartingKongs(settings: Settings):
         # If we hit one of the `break`s above, it's likely we can't logically access any level past it
         # If this happens, we got unlucky (settings dependending) and restart this process or else we crash
         # The most common instance of this is when Aztec is level 1 and you don't start with Diddy
-        if levelIndexOptions == []:
+        if not levelIndexOptions:
             return ShuffleLevelOrderForMultipleStartingKongs(settings)
         # Place level in newLevelOrder and remove from list of remaining slots
         shuffledLevelIndex = random.choice(levelIndexOptions)

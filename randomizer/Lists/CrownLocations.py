@@ -22,10 +22,7 @@ class CrownLocation:
         self.is_rotating_room = is_rotating_room
         self.default_index = default_index
         self.placement_subindex = default_index
-        if logic is None:
-            self.logic = lambda l: True
-        else:
-            self.logic = logic
+        self.logic = (lambda l: True) if logic is None else logic
 
 
 CrownLocations = {

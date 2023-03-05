@@ -80,8 +80,7 @@ def GetBlueprintItemForKongAndLevel(level, kong):
     baseOffset = int(Items.JungleJapesDonkeyBlueprint)  # Japes/Donkey is the first Blueprint item and they're all grouped together
     levelOffset = int(level)
     # Other levels are 0-6 but Helm is 7, DK Isles is 8, and I'm too scared to change it so it's accounted for here
-    if levelOffset > 7:
-        levelOffset = 7
+    levelOffset = min(levelOffset, 7)
     return Items(baseOffset + (5 * levelOffset) + int(kong))
 
 
@@ -90,8 +89,7 @@ def GetBlueprintLocationForKongAndLevel(level, kong):
     baseOffset = int(Locations.JapesDonkeyKasplatRando)  # Japes/Donkey is the first generic Blueprint location and they're all grouped together
     levelOffset = int(level)
     # Other levels are 0-6 but Helm is 7, DK Isles is 8, and I'm too scared to change it so it's accounted for here
-    if levelOffset > 7:
-        levelOffset = 7
+    levelOffset = min(levelOffset, 7)
     return Locations(baseOffset + (5 * levelOffset) + int(kong))
 
 
@@ -111,11 +109,11 @@ def ShuffleKasplatsAndLocations(spoiler, LogicVariables):
         kongs = GetKongs()
         random.shuffle(kongs)
         for kong in kongs:
-            available_for_kong = []
-            # Pick a random unselected kasplat from available ones for this kong
-            for kasplat in kasplats:
-                if not kasplat.selected and kong in kasplat.kong_lst:
-                    available_for_kong.append(kasplat.name)
+            available_for_kong = [
+                kasplat.name
+                for kasplat in kasplats
+                if not kasplat.selected and kong in kasplat.kong_lst
+            ]
             selected_kasplat = random.choice(available_for_kong)
             # Loop through kasplats until we find the relevant one
             for kasplat in kasplats:
@@ -181,13 +179,8 @@ def ResetShuffledKasplatLocations():
 
 def ShuffleKasplats(LogicVariables):
     """Shuffles the kong assigned to each kasplat."""
-    # Make sure only 1 of each kasplat per level, set up array to track that
-    level_kongs = []
     kongs = GetKongs()
-    # Add a list of kongs for each level
-    # Excludes Shops level, but will include a useless Helm level
-    for i in range(len(Levels) - 1):
-        level_kongs.append(kongs.copy())
+    level_kongs = [kongs.copy() for _ in range(len(Levels) - 1)]
     # Remove constants
     for loc, kong in constants.items():
         level = FindLevel(loc)
@@ -197,11 +190,11 @@ def ShuffleKasplats(LogicVariables):
     # Make all shufflable kasplats initially accessible as anyone
     for location in shufflable.keys():
         LogicVariables.kasplat_map[location] = Kongs.any
-    LogicVariables.kasplat_map.update(constants)
+    LogicVariables.kasplat_map |= constants
     # Do the shuffling
     shuffle_locations = list(shufflable.keys())
     random.shuffle(shuffle_locations)
-    while len(shuffle_locations) > 0:
+    while shuffle_locations:
         location = shuffle_locations.pop()
         # Get this location's level and available kongs for this level
         level = FindLevel(location)
@@ -221,36 +214,37 @@ def ShuffleKasplats(LogicVariables):
 
 def KasplatShuffle(spoiler, LogicVariables):
     """Facilitate the shuffling of kasplat types."""
-    if spoiler.settings.kasplat_rando:
-        retries = 0
-        while True:
-            try:
-                # Shuffle kasplats
-                if spoiler.settings.kasplat_location_rando:
-                    ShuffleKasplatsAndLocations(spoiler, LogicVariables)
-                else:
-                    ShuffleKasplatsInVanillaLocations(spoiler, LogicVariables)
-                # Verify world by assuring all locations are still reachable
-                Fill.Reset()
-                if not Fill.VerifyWorld(spoiler.settings):
-                    raise Ex.KasplatPlacementException
-                return
-            except Ex.KasplatPlacementException:
-                if retries == 10:
-                    # This is the first VerifyWorld check, and serves as the canary in the coal mine
-                    # If we get to this point in the code, the world itself is likely unstable from some combination of settings or bugs
-                    js.postMessage("Settings combination is likely unstable.")
-                    raise Ex.KasplatAttemptCountExceeded
-                retries += 1
-                js.postMessage("Kasplat placement failed. Retrying. Tries: " + str(retries))
-                # We've added logic in kasplat location rando, now we need to remove it
-                if spoiler.settings.kasplat_location_rando:
-                    ResetShuffledKasplatLocations()
+    if not spoiler.settings.kasplat_rando:
+        return
+    retries = 0
+    while True:
+        try:
+            # Shuffle kasplats
+            if spoiler.settings.kasplat_location_rando:
+                ShuffleKasplatsAndLocations(spoiler, LogicVariables)
+            else:
+                ShuffleKasplatsInVanillaLocations(spoiler, LogicVariables)
+            # Verify world by assuring all locations are still reachable
+            Fill.Reset()
+            if not Fill.VerifyWorld(spoiler.settings):
+                raise Ex.KasplatPlacementException
+            return
+        except Ex.KasplatPlacementException:
+            if retries == 10:
+                # This is the first VerifyWorld check, and serves as the canary in the coal mine
+                # If we get to this point in the code, the world itself is likely unstable from some combination of settings or bugs
+                js.postMessage("Settings combination is likely unstable.")
+                raise Ex.KasplatAttemptCountExceeded
+            retries += 1
+            js.postMessage(f"Kasplat placement failed. Retrying. Tries: {retries}")
+            # We've added logic in kasplat location rando, now we need to remove it
+            if spoiler.settings.kasplat_location_rando:
+                ResetShuffledKasplatLocations()
 
 
 def InitKasplatMap(LogicVariables):
     """Initialize kasplat_map in logic variables with default values."""
     # Just use default kasplat associations.
     LogicVariables.kasplat_map = {}
-    LogicVariables.kasplat_map.update(shufflable)
+    LogicVariables.kasplat_map |= shufflable
     LogicVariables.kasplat_map.update(constants)
