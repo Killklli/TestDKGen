@@ -87,13 +87,13 @@ def ShufflePatches(spoiler: Spoiler, human_spoiler):
     select_random_dirt_from_area(total_dirt_patch_list[Levels.DKIsles], 4, spoiler, human_spoiler)
     del total_dirt_patch_list[Levels.DKIsles]
 
-    for SingleDirtPatchLocation in range(5):
+    for _ in range(5):
         area_key = random.choice(list(total_dirt_patch_list.keys()))
         area_dirt = total_dirt_patch_list[area_key]
         select_random_dirt_from_area(area_dirt, 2, spoiler, human_spoiler)
         del total_dirt_patch_list[area_key]
 
-    for area_key in total_dirt_patch_list.keys():
+    for area_key in total_dirt_patch_list:
         area_dirt = total_dirt_patch_list[area_key]
         select_random_dirt_from_area(area_dirt, 1, spoiler, human_spoiler)
 
@@ -108,7 +108,7 @@ def ShufflePatches(spoiler: Spoiler, human_spoiler):
 
 def select_random_dirt_from_area(area_dirt, amount, spoiler: Spoiler, human_spoiler):
     """Select <amount> random dirt patches from <area_dirt>, which is a list of dirt patches. Makes sure max 1 dirt patch per group is selected."""
-    for iterations in range(amount):
+    for _ in range(amount):
         selected_patch = random.choice(area_dirt)  # selects a random patch from the list
         for patch in DirtPatchLocations:  # enables the selected patch
             if patch.name == selected_patch.name:

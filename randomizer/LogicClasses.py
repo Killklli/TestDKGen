@@ -90,17 +90,16 @@ class Region:
             self.lankyAccess = logicVariables.lanky
             self.tinyAccess = logicVariables.tiny
             self.chunkyAccess = logicVariables.chunky
+        elif kong == Kongs.donkey:
+            self.donkeyAccess = True
+        elif kong == Kongs.diddy:
+            self.diddyAccess = True
+        elif kong == Kongs.lanky:
+            self.lankyAccess = True
+        elif kong == Kongs.tiny:
+            self.tinyAccess = True
         else:
-            if kong == Kongs.donkey:
-                self.donkeyAccess = True
-            elif kong == Kongs.diddy:
-                self.diddyAccess = True
-            elif kong == Kongs.lanky:
-                self.lankyAccess = True
-            elif kong == Kongs.tiny:
-                self.tinyAccess = True
-            else:
-                self.chunkyAccess = True
+            self.chunkyAccess = True
 
     def UpdateAccessFromRegion(self, region):
         """Set access to region from another region."""
@@ -213,10 +212,7 @@ class ColoredBananaGroup:
         self.kongs = konglist
         self.locations = locations  # 5 numbers: {int amount, float scale, int x, y, z}
         self.region = region
-        if logic is None:
-            self.logic = lambda l: True
-        else:
-            self.logic = logic
+        self.logic = (lambda l: True) if logic is None else logic
         self.selected = False
 
 
@@ -232,10 +228,7 @@ class Balloon:
         self.kongs = konglist
         self.points = points  # 3 numbers: [int x, y, z]
         self.region = region
-        if logic is None:
-            self.logic = lambda l: True
-        else:
-            self.logic = logic
+        self.logic = (lambda l: True) if logic is None else logic
         self.spawnPoint = self.setSpawnPoint(points)
         self.selected = False
 
@@ -252,4 +245,4 @@ class Balloon:
         spawnY /= len(points)
         spawnY -= 100  # Most balloons are at least 100 units off the ground
         spawnZ /= len(points)
-        return [int(spawnX), int(spawnY), int(spawnZ)]
+        return [spawnX, spawnY, spawnZ]

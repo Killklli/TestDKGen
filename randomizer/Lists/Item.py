@@ -250,7 +250,6 @@ ItemList = {
     Items.BananaHoard: Item("Banana Hoard", True, Types.Constant, Kongs.any),
 }
 
-HHItemSelector = []
 HHItems = [
     ("Starting Time", 20 * 60),
     ("Golden Banana", 20),
@@ -268,5 +267,12 @@ HHItems = [
     ("Colored Bananas", 3),
     ("Ice Traps", -40),
 ]
-for item in HHItems:
-    HHItemSelector.append({"name": item[0], "value": item[0].lower().replace(" ", "_"), "tooltip": "", "default": item[1]})
+HHItemSelector = [
+    {
+        "name": item[0],
+        "value": item[0].lower().replace(" ", "_"),
+        "tooltip": "",
+        "default": item[1],
+    }
+    for item in HHItems
+]

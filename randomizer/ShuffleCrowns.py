@@ -33,9 +33,7 @@ def ShuffleCrowns(crown_selection, human_crowns):
         if level == Levels.DKIsles:
             pick_count = 2
         crowns = random.sample(index_lst, pick_count)
-        crown_data = {}
-        for crown_index in crowns:
-            crown_data[crown_index] = 0
+        crown_data = {crown_index: 0 for crown_index in crowns}
         if level == Levels.DKIsles:
             isles_placed = [False, False]
             for crown_index in crowns:

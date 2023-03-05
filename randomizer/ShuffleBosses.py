@@ -90,9 +90,7 @@ def ShuffleKKOPhaseOrder(settings):
     """Shuffle the phase order in King Kut Out."""
     kko_phases = [0, 1, 2, 3]
     random.shuffle(kko_phases)
-    kko_phase_subset = []
-    for phase_slot in range(3):
-        kko_phase_subset.append(kko_phases[phase_slot])
+    kko_phase_subset = [kko_phases[phase_slot] for phase_slot in range(3)]
     return kko_phase_subset.copy()
 
 
@@ -177,7 +175,7 @@ def ShuffleBossesBasedOnOwnedItems(settings, ownedKongs: dict, ownedMoves: dict)
         castleBossKong = random.choice(ownedKongs[castleBossIndex])
         newBossMaps = []
         newBossKongs = []
-        for level in range(0, 7):
+        for level in range(7):
             if level == japesBossIndex:
                 newBossMaps.append(Maps.JapesBoss)
                 newBossKongs.append(japesBossKong)
@@ -206,7 +204,9 @@ def ShuffleBossesBasedOnOwnedItems(settings, ownedKongs: dict, ownedMoves: dict)
     except Exception as ex:
         if isinstance(ex.args[0], str) and "index out of range" in ex.args[0]:
             print("Unlucky move placement fill :(")
-            raise BossOutOfLocationsException("No valid locations to place " + bossTryingToBePlaced)
+            raise BossOutOfLocationsException(
+                f"No valid locations to place {bossTryingToBePlaced}"
+            )
         if isinstance(ex.args[0], str) and "pop from empty list" in ex.args[0]:
             print("Barrels bad.")
             raise BossOutOfLocationsException("No valid locations to place " + bossTryingToBePlaced)
@@ -220,10 +220,19 @@ def ShuffleBossesBasedOnOwnedItems(settings, ownedKongs: dict, ownedMoves: dict)
         settings.boss_maps = BossMapList.copy()
     if settings.kong_rando or settings.boss_kong_rando:
         # If we shuffle kongs but not locations, we must forcibly sort the array with the known valid kongs
-        if not settings.boss_location_rando:
-            settings.boss_kongs = [japesBossKong, aztecBossKong, factoryBossKong, galleonBossKong, forestBossKong, cavesBossKong, castleBossKong]
-        else:
-            settings.boss_kongs = newBossKongs
+        settings.boss_kongs = (
+            newBossKongs
+            if settings.boss_location_rando
+            else [
+                japesBossKong,
+                aztecBossKong,
+                factoryBossKong,
+                galleonBossKong,
+                forestBossKong,
+                cavesBossKong,
+                castleBossKong,
+            ]
+        )
     else:
         settings.boss_kongs = ShuffleBossKongs(settings)
     settings.kutout_kongs = ShuffleKutoutKongs(settings.boss_maps, settings.boss_kongs, settings.boss_kong_rando)
@@ -250,9 +259,8 @@ def ShuffleTinyPhaseToes():
                 toe_list = [0, 2, 3]
             toe_list = [x for x in toe_list if abs(x - previous_toe) < 3]  # Prevent toes being selected that
             toe_count = random.randint(1, min(3, len(toe_list) - 1))
-            if len(toe_list) <= 1:
-                toe_bitfield = 0
-            else:
+            toe_bitfield = 0
+            if len(toe_list) > 1:
                 activated_toes = random.sample(toe_list, toe_count)
                 unactivated_toes = [x for x in list(range(4)) if x not in activated_toes]
                 picked_toe = False
@@ -262,7 +270,6 @@ def ShuffleTinyPhaseToes():
                         picked_toe = True
                 if not picked_toe:
                     previous_toe = random.choice(unactivated_toes)
-                toe_bitfield = 0
                 for toe in activated_toes:
                     toe_bitfield |= 1 << toe
             toe_sequence.append(toe_bitfield)

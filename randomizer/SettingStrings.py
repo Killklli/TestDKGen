@@ -78,15 +78,14 @@ def encrypt_settings_string_enum(dict_data: dict):
         if pop in dict_data:
             dict_data.pop(pop)
     bitstring = ""
-    for key in dict_data:
-        value = dict_data[key]
+    for key, value in dict_data.items():
         # At this time, all strings represent ints, so just convert.
         if type(value) == str:
             value = int(value)
         key_enum = SettingsStringEnum[key]
         key_data_type = SettingsStringTypeMap[key_enum]
         # Encode the key.
-        key_size = max([member.value for member in SettingsStringEnum]).bit_length()
+        key_size = max(member.value for member in SettingsStringEnum).bit_length()
         bitstring += bin(key_enum)[2:].zfill(key_size)
         if key_data_type == SettingsStringDataType.bool:
             bitstring += "1" if value else "0"
@@ -112,26 +111,23 @@ def encrypt_settings_string_enum(dict_data: dict):
                     bitstring += int_to_bin_string(item, 16)
                 else:
                     # The value is an enum.
-                    max_value = max([member.value for member in key_list_data_type])
+                    max_value = max(member.value for member in key_list_data_type)
                     bitstring += format(item.value, f"0{max_value.bit_length()}b")
         else:
             # The value is an enum.
-            max_value = max([member.value for member in key_data_type])
+            max_value = max(member.value for member in key_data_type)
             bitstring += format(value.value, f"0{max_value.bit_length()}b")
 
     # Pad the bitstring with zeroes until the length is divisible by 6.
     remainder = len(bitstring) % 6
     if remainder > 0:
-        for _ in range(0, 6 - remainder):
+        for _ in range(6 - remainder):
             bitstring += "0"
 
-    # Split the bitstring into 6-bit chunks and look up the corresponding
-    # letters.
-    letter_string = ""
-    for i in range(0, len(bitstring), 6):
-        chunk = int(bitstring[i : i + 6], 2)
-        letter_string += letters[chunk]
-    return letter_string
+    return "".join(
+        letters[int(bitstring[i : i + 6], 2)]
+        for i in range(0, len(bitstring), 6)
+    )
 
 
 def decrypt_settings_string_enum(encrypted_string: str):
@@ -153,7 +149,7 @@ def decrypt_settings_string_enum(encrypted_string: str):
     bitstring_length = len(bitstring)
     settings_dict = {}
     bit_index = 0
-    key_size = max([member.value for member in SettingsStringEnum]).bit_length()
+    key_size = max(member.value for member in SettingsStringEnum).bit_length()
     # If there are fewer than (key_size + 1) characters left in our bitstring,
     # we have hit the padding. (key_size + 1 characters is the minimum needed
     # for a key and a value.)
@@ -166,7 +162,7 @@ def decrypt_settings_string_enum(encrypted_string: str):
         key_data_type = SettingsStringTypeMap[key_enum]
         val = None
         if key_data_type == SettingsStringDataType.bool:
-            val = True if bitstring[bit_index] == "1" else False
+            val = bitstring[bit_index] == "1"
             bit_index += 1
         elif key_data_type == SettingsStringDataType.int4:
             val = bin_string_to_int(bitstring[bit_index : bit_index + 4], 4)
@@ -185,7 +181,7 @@ def decrypt_settings_string_enum(encrypted_string: str):
             for _ in range(list_length):
                 list_val = None
                 if key_list_data_type == SettingsStringDataType.bool:
-                    list_val = True if bitstring[bit_index] == "1" else False
+                    list_val = bitstring[bit_index] == "1"
                     bit_index += 1
                 elif key_list_data_type == SettingsStringDataType.int4:
                     list_val = bin_string_to_int(bitstring[bit_index : bit_index + 4], 4)
@@ -198,14 +194,14 @@ def decrypt_settings_string_enum(encrypted_string: str):
                     bit_index += 16
                 else:
                     # The value is an enum.
-                    max_value = max([member.value for member in key_list_data_type])
+                    max_value = max(member.value for member in key_list_data_type)
                     int_val = int(bitstring[bit_index : bit_index + max_value.bit_length()], 2)
                     list_val = key_list_data_type(int_val)
                     bit_index += max_value.bit_length()
                 val.append(list_val)
         else:
             # The value is an enum.
-            max_value = max([member.value for member in key_data_type])
+            max_value = max(member.value for member in key_data_type)
             int_val = int(bitstring[bit_index : bit_index + max_value.bit_length()], 2)
             val = key_data_type(int_val)
             bit_index += max_value.bit_length()

@@ -68,7 +68,7 @@ class Settings:
             self.generate_spoilerlog = False
         self.seed = str(self.seed) + self.__hash + str(json.dumps(form_data))
         self.set_seed()
-        self.seed_hash = [random.randint(0, 9) for i in range(5)]
+        self.seed_hash = [random.randint(0, 9) for _ in range(5)]
         self.krool_keys_required = []
         # Settings which are not yet implemented on the web page
 
@@ -91,7 +91,7 @@ class Settings:
             self.troff_min = [0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75]  # Add 20% to the minimum for hard T&S
         # In hard level progression we go through levels in a random order, so we set every level's troff min weight to the largest weight
         if self.hard_level_progression:
-            self.troff_min = [self.troff_min[-1] for x in self.troff_min]
+            self.troff_min = [self.troff_min[-1] for _ in self.troff_min]
 
         # set to true if move_rando set to start_with
         self.unlock_all_moves = False
@@ -180,9 +180,12 @@ class Settings:
             self.troff_weight_6 = 1
 
         if self.randomize_cb_required_amounts:
-            randomlist = []
-            for min_percentage in self.troff_min:
-                randomlist.append(random.randint(round(self.troff_max * min_percentage), self.troff_max))
+            randomlist = [
+                random.randint(
+                    round(self.troff_max * min_percentage), self.troff_max
+                )
+                for min_percentage in self.troff_min
+            ]
             cbs = randomlist
             self.troff_0 = round(min(cbs[0] * self.troff_weight_0, 500))
             self.troff_1 = round(min(cbs[1] * self.troff_weight_1, 500))

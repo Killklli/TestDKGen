@@ -11,7 +11,6 @@ class GlitchLogicItem:
         self.tooltip = tooltip
 
 
-GlitchSelector = []
 # If you make changes to this list, make sure to change the corresponding
 # GlitchesSelected enum in randomizer.Enums.Settings.
 GlitchLogicItems = [
@@ -29,6 +28,8 @@ GlitchLogicItems = [
     GlitchLogicItem("Troff n Scoff Skips", "Any skip that allows you to bypass the kong and small banana requirement in order to fight a boss."),
     # GlitchLogicItem("Boulder Clips"),
 ]
-for item in GlitchLogicItems:
-    if item.name != "No Group":
-        GlitchSelector.append({"name": item.name, "value": item.shorthand, "tooltip": item.tooltip})
+GlitchSelector = [
+    {"name": item.name, "value": item.shorthand, "tooltip": item.tooltip}
+    for item in GlitchLogicItems
+    if item.name != "No Group"
+]

@@ -138,8 +138,7 @@ def AllItems(settings):
         if settings.training_barrels == TrainingBarrels.shuffled:
             allItems.extend(TrainingBarrelAbilities().copy())
         if settings.shockwave_status == ShockwaveStatus.shuffled_decoupled:
-            allItems.append(Items.Camera)
-            allItems.append(Items.Shockwave)
+            allItems.extend((Items.Camera, Items.Shockwave))
         else:
             allItems.append(Items.CameraAndShockwave)
     if settings.kong_rando or Types.Kong in settings.shuffled_location_types:
@@ -216,7 +215,7 @@ def ShockwaveTypeItems(settings):
 
 def Blueprints():
     """Return all blueprint items."""
-    blueprints = [
+    return [
         Items.DKIslesDonkeyBlueprint,
         Items.DKIslesDiddyBlueprint,
         Items.DKIslesLankyBlueprint,
@@ -258,7 +257,6 @@ def Blueprints():
         Items.CreepyCastleTinyBlueprint,
         Items.CreepyCastleChunkyBlueprint,
     ]
-    return blueprints
 
 
 def Keys():
@@ -307,8 +305,7 @@ def Instruments(settings):
 
 def TrainingBarrelAbilities():
     """Return all training barrel abilities."""
-    barrelAbilities = [Items.Vines, Items.Swim, Items.Oranges, Items.Barrels]
-    return barrelAbilities
+    return [Items.Vines, Items.Swim, Items.Oranges, Items.Barrels]
 
 
 def Upgrades(settings):
@@ -346,17 +343,17 @@ def Upgrades(settings):
                     Items.GorillaGone,
                 ]
             )
-        upgrades.append(Items.HomingAmmo)
-        upgrades.append(Items.SniperSight)
+        upgrades.extend((Items.HomingAmmo, Items.SniperSight))
         upgrades.extend(itertools.repeat(Items.ProgressiveAmmoBelt, 2))
         upgrades.extend(itertools.repeat(Items.ProgressiveInstrumentUpgrade, 3))
     if settings.shockwave_status != ShockwaveStatus.start_with:
-        if settings.shockwave_status == ShockwaveStatus.vanilla or settings.shockwave_status == ShockwaveStatus.shuffled:
+        if settings.shockwave_status in [
+            ShockwaveStatus.vanilla,
+            ShockwaveStatus.shuffled,
+        ]:
             upgrades.append(Items.CameraAndShockwave)
         else:
-            upgrades.append(Items.Camera)
-            upgrades.append(Items.Shockwave)
-
+            upgrades.extend((Items.Camera, Items.Shockwave))
     return upgrades
 
 
@@ -372,10 +369,7 @@ def HighPriorityItems(settings):
 
 def CompanyCoinItems():
     """Return the Company Coin items to be placed."""
-    itemPool = []
-    itemPool.append(Items.NintendoCoin)
-    itemPool.append(Items.RarewareCoin)
-    return itemPool
+    return [Items.NintendoCoin, Items.RarewareCoin]
 
 
 TOUGH_BANANA_COUNT = 13
@@ -411,8 +405,7 @@ def BattleCrownItems():
 
 def MiscItemRandoItems():
     """Return a list of Items that are classed as miscellaneous."""
-    itemPool = []
-    itemPool.append(Items.Bean)
+    itemPool = [Items.Bean]
     itemPool.extend(itertools.repeat(Items.Pearl, 5))
     return itemPool
 
@@ -444,7 +437,7 @@ def JunkItems():
     # items_to_place = (Items.JunkAmmo, Items.JunkCrystal, Items.JunkFilm, Items.JunkMelon, Items.JunkOrange)
     # items_to_place = (Items.JunkAmmo, Items.JunkCrystal, Items.JunkMelon, Items.JunkOrange)
     items_to_place = [Items.JunkMelon]
-    lim = int(100 / len(items_to_place))
+    lim = 100 // len(items_to_place)
     for item_type in items_to_place:
         itemPool.extend(itertools.repeat(item_type, lim))
     return itemPool

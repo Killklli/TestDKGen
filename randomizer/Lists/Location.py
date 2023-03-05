@@ -52,8 +52,10 @@ class Location:
             if self.kong < 5:
                 lst.append((self.vendor * 40) + (self.kong * 8) + lvl_index)
             else:
-                for kong_index in range(5):
-                    lst.append((self.vendor * 40) + (kong_index * 8) + lvl_index)
+                lst.extend(
+                    (self.vendor * 40) + (kong_index * 8) + lvl_index
+                    for kong_index in range(5)
+                )
             self.placement_index = lst
         elif self.type in (Types.TrainingBarrel, Types.Shockwave):
             self.placement_index = [data[0]]
@@ -69,10 +71,7 @@ class Location:
                 level_index = 7
             self.map_id_list = [MapIDCombo(0, -1, 549 + self.kong + (5 * level_index), self.kong)]
         elif self.type in (Types.Banana, Types.ToughBanana, Types.Key, Types.Coin, Types.Crown, Types.Medal, Types.Bean, Types.Pearl, Types.Kong, Types.Fairy, Types.RainbowCoin):
-            if data is None:
-                self.map_id_list = []
-            else:
-                self.map_id_list = data
+            self.map_id_list = [] if data is None else data
         self.default_mapid_data = self.map_id_list
         # "Reward" locations are locations that require an actor to exist for the location's item - something not all items have
         if self.default_mapid_data is not None and len(self.default_mapid_data) > 0 and type(self.default_mapid_data[0]) is MapIDCombo and self.default_mapid_data[0].id == -1 and self.type != Types.Kong:

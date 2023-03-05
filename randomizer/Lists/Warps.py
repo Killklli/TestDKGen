@@ -28,10 +28,7 @@ class BananaportData:
         self.event_logic = lambda l: event in l.Events
         self.cross_map_placed = False
         vanilla_pair_index = swap_index % 2
-        if vanilla_pair_index == 0:
-            self.tied_index = swap_index + 1
-        else:
-            self.tied_index = swap_index - 1
+        self.tied_index = swap_index + 1 if vanilla_pair_index == 0 else swap_index - 1
 
     def setNewWarp(self, new_warp):
         """Set new warp type."""

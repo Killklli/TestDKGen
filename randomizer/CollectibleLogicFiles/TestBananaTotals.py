@@ -24,10 +24,16 @@ def __CountBananasForLevel(bananaTotals, collectibles, level):
         bananaTotals[level][collectible.kong] += collectible.amount * multiplier
 
 
-bananaTotals = []
-for i in range(7):
-    bananaTotals.append({Kongs.donkey: 0, Kongs.diddy: 0, Kongs.lanky: 0, Kongs.tiny: 0, Kongs.chunky: 0})
-
+bananaTotals = [
+    {
+        Kongs.donkey: 0,
+        Kongs.diddy: 0,
+        Kongs.lanky: 0,
+        Kongs.tiny: 0,
+        Kongs.chunky: 0,
+    }
+    for _ in range(7)
+]
 for region, collectibles in JungleJapes.LogicRegions.items():
     __CountBananasForLevel(bananaTotals, collectibles, Levels.JungleJapes)
 
@@ -50,9 +56,9 @@ for region, collectibles in CreepyCastle.LogicRegions.items():
     __CountBananasForLevel(bananaTotals, collectibles, Levels.CreepyCastle)
 
 for level in range(7):
-    print(Levels(level).name + " Totals:")
+    print(f"{Levels(level).name} Totals:")
     levelTotals = bananaTotals[level]
     for kong, total in levelTotals.items():
-        print(kong.name + ": " + str(total))
+        print(f"{kong.name}: {str(total)}")
 
 print("Done.")

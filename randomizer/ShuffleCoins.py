@@ -41,7 +41,7 @@ level_data = {
 
 def getCoinRequirement() -> int:
     """Get requirement for a kong's coin amount."""
-    return int(random.randint(KONG_COIN_REQUIREMENT, KONG_COIN_CAP) / 8)
+    return random.randint(KONG_COIN_REQUIREMENT, KONG_COIN_CAP) // 8
 
 
 def ShuffleCoins(spoiler: Spoiler):
@@ -110,4 +110,4 @@ def ShuffleCoins(spoiler: Spoiler):
                 js.postMessage("Coin Randomizer failed to fill. REPORT THIS TO THE DEVS!!")
                 raise Ex.CoinFillFailureException
             retries += 1
-            js.postMessage("Coin Randomizer failed to fill. Tries: " + str(retries))
+            js.postMessage(f"Coin Randomizer failed to fill. Tries: {retries}")

@@ -64,27 +64,27 @@ class Spoiler:
             master_moves = []
             if move_master_type == 0:
                 # Shop
-                for shop_index in range(3):
+                for _ in range(3):
                     moves = []
                     # One for each kong
-                    for kong_index in range(5):
-                        kongmoves = []
-                        # One for each level
-                        for level_index in range(8):
-                            kongmoves.append({"move_type": None})
+                    for _ in range(5):
+                        kongmoves = [{"move_type": None} for _ in range(8)]
                         moves.append(kongmoves)
                     master_moves.append(moves)
             elif move_master_type == 1:
                 # Training Barrels
                 if self.settings.training_barrels == TrainingBarrels.normal:
-                    for tbarrel_type in ["dive", "orange", "barrel", "vine"]:
-                        master_moves.append({"move_type": "flag", "flag": tbarrel_type, "price": 0})
+                    master_moves.extend(
+                        {"move_type": "flag", "flag": tbarrel_type, "price": 0}
+                        for tbarrel_type in ["dive", "orange", "barrel", "vine"]
+                    )
             elif move_master_type == 2:
                 # BFI
-                if self.settings.shockwave_status == ShockwaveStatus.vanilla:
-                    master_moves = [{"move_type": "flag", "flag": "camera_shockwave", "price": 0}]
-                else:
-                    master_moves = [{"move_type": None}]
+                master_moves = (
+                    [{"move_type": "flag", "flag": "camera_shockwave", "price": 0}]
+                    if self.settings.shockwave_status == ShockwaveStatus.vanilla
+                    else [{"move_type": None}]
+                )
             self.move_data.append(master_moves)
 
         self.hint_list = {}
@@ -114,9 +114,7 @@ class Spoiler:
             Types.FakeItem: "Ice Traps",
             Types.JunkItem: "Junk Items",
         }
-        if item_type in type_dict:
-            return type_dict[item_type]
-        return "Unknown"
+        return type_dict.get(item_type, "Unknown")
 
     def createJson(self):
         """Convert spoiler to JSON and save it."""

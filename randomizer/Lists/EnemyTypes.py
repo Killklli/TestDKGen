@@ -192,8 +192,9 @@ EnemyMetaData = {
 }
 
 
-EnemySelector = []
-for enemyEnum, enemy in EnemyMetaData.items():
-    if enemy.selector_enabled:
-        EnemySelector.append({"name": enemy.name, "value": enemyEnum.name, "tooltip": ""})
+EnemySelector = [
+    {"name": enemy.name, "value": enemyEnum.name, "tooltip": ""}
+    for enemyEnum, enemy in EnemyMetaData.items()
+    if enemy.selector_enabled
+]
 EnemySelector = sorted(EnemySelector.copy(), key=lambda d: d["name"])
